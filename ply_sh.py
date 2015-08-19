@@ -58,6 +58,8 @@ def t_error(t):
 # Build the lexer
 import ply.lex as lex
 lexer = lex.lex()
+import glob
+import re
 
 # Parsing rules
 
@@ -104,7 +106,10 @@ def p_expression_binop(t):
 
 def p_expression_word(t):
     'expression : word'
-    t[0] = [t[1]]
+    if re.search("\[\w+\]|\*|\?", t[1]):
+        t[0] = glob.glob(t[1])
+    else:
+        t[0] = [t[1]]
 
 def p_word(t):
     '''word : WORD'''
@@ -136,13 +141,13 @@ parser = yacc.yacc()
 print __name__
 
 if __name__ == '__main__':
-    s = """abc=te.txt
+    s = """abc=te.*
 dfa$abc
 5+5+bAl
-$abc * 2 + 5
+$abc  2 + 5
 """
 
-    lexer.input('abc=te.txt')
+    lexer.input('abc=te.*')
     t = lexer.token()
     while t:
         print(t)
