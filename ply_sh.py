@@ -114,8 +114,10 @@ def p_expression_var(t):
     'word : VAR'
     try:
         t[0] = names[t[1][1:]]
+        return
     except LookupError:
         pass
+
     try:
         t[0] = env[t[1][1:]]
     except LookupError:
@@ -134,13 +136,13 @@ parser = yacc.yacc()
 print __name__
 
 if __name__ == '__main__':
-    s = """abc=d
+    s = """abc=te.txt
 dfa$abc
 5+5+bAl
 $abc * 2 + 5
 """
 
-    lexer.input('abc$d')
+    lexer.input('abc=te.txt')
     t = lexer.token()
     while t:
         print(t)
