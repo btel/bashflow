@@ -60,12 +60,14 @@ import ply.lex as lex
 lexer = lex.lex()
 import glob
 import re
+import os
 
 # Parsing rules
 
 # dictionary of names
 names = { }
 env = {}
+env.update(os.environ)
 
 def p_statement_expr(t):
     'statement : expression'
