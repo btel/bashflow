@@ -20,23 +20,28 @@ reserved = {
 
 # Tokens
 
-t_VAR    = r'\$[a-zA-Z_][a-zA-Z0-9_]*'
+def t_VAR(t):
+    r'\$[a-zA-Z_][a-zA-Z0-9_]*'
+    return t
+
 def t_NAME(t):
     r'[a-zA-Z_][a-zA-Z0-9_]*='
     return t
 
 def t_WORD(t):
-    r'[^\s=\$]+'
+    r'[^\s=\$#]+'
     t.type = reserved.get(t.value, 'WORD')
     return t
     
 t_SEP = r'[\s]+'
 
-
 def t_COMMENT(t):
     r'\#.*'
     pass
 
+def t_ENDLINE(t):
+    r'\s+\n'
+    pass
 
 
 # Ignored characters
@@ -110,8 +115,16 @@ def p_expression_var(t):
     try:
         t[0] = names[t[1][1:]]
     except LookupError:
+        pass
+    try:
+        t[0] = env[t[1][1:]]
+    except LookupError:
         print("Undefined name '%s'" % t[1])
         t[0] = '' 
+
+def p_expression_concat(t):
+    'word : word word'
+    t[0] = t[1] + t[2] 
 
 def p_error(t):
     print("Syntax error at '%s'" % t.value)
@@ -122,11 +135,12 @@ print __name__
 
 if __name__ == '__main__':
     s = """abc=d
+dfa$abc
 5+5+bAl
 $abc * 2 + 5
 """
 
-    lexer.input('abc=d')
+    lexer.input('abc$d')
     t = lexer.token()
     while t:
         print(t)
