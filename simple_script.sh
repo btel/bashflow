@@ -1,3 +1,3 @@
 scriptname=test.py
 export MYVAR=t
-python $scriptname
+MYVAR2=afad python $scriptname

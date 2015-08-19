@@ -9,7 +9,6 @@
 
 tokens = (
     'NAME','VAR', 
-    'EQUALS',
      'WORD',
      'SEP',
      'EXPORT',
@@ -22,20 +21,21 @@ reserved = {
 # Tokens
 
 t_VAR    = r'\$[a-zA-Z_][a-zA-Z0-9_]*'
-t_WORD    = r'[^\s]+'
+def t_NAME(t):
+    r'[a-zA-Z_][a-zA-Z0-9_]*='
+    return t
+
+def t_WORD(t):
+    r'[^\s=\$]+'
+    t.type = reserved.get(t.value, 'WORD')
+    return t
+    
 t_SEP = r'[\s]+'
 
-def t_NAME(t):
-    r'[a-zA-Z_][a-zA-Z0-9_]*'
-    t.type = reserved.get(t.value, 'NAME')
-    return t
 
 def t_COMMENT(t):
     r'\#.*'
     pass
-def t_EQUALS(t):
-    r'='
-    return t
 
 
 
@@ -70,10 +70,10 @@ def p_export_statement(t):
     t[0] = {'cmd' : [], 'env' : env}
 
 def p_statement_complex_expr(t):
-    'statement : env SEP expression'
+    'statement : env expression'
     statement_env = env.copy()
     statement_env.update(t[1])
-    t[0] = dict(cmd=t[3], env=statement_env)
+    t[0] = dict(cmd=t[2], env=statement_env)
      
 def p_statement_env(t):
     'statement : env'
@@ -81,29 +81,28 @@ def p_statement_env(t):
     t[0]= dict(cmd=[], env=[])
 
 def p_env(t):
-    'env : NAME EQUALS word'
-    t[0] = {t[1]:t[3]}
+    'env : NAME word'
+    t[0] = {t[1][:-1]:t[2]}
+
+def p_env_sep(t):
+    'env : env SEP'
+    t[0] = t[1]
 
 def p_env_empty(t):
-    'env : NAME EQUALS'
-    t[0] = {t[1]:''}
+    'env : NAME SEP'
+    t[0] = {t[1][:-1]:''}
 
 
 def p_expression_binop(t):
     '''expression : expression SEP expression'''
     t[0] = t[1] + t[3]
 
-def p_name_expr(t):
-    '''expression : NAME SEP expression'''
-    t[0] = [t[1]] + t[3]
-
 def p_expression_word(t):
     'expression : word'
     t[0] = [t[1]]
 
 def p_word(t):
-    '''word : WORD
-            | EQUALS'''
+    '''word : WORD'''
     t[0] = t[1]
 
 def p_expression_var(t):
@@ -127,7 +126,7 @@ if __name__ == '__main__':
 $abc * 2 + 5
 """
 
-    lexer.input('export abc=d')
+    lexer.input('abc=d')
     t = lexer.token()
     while t:
         print(t)
