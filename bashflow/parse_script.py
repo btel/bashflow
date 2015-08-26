@@ -15,7 +15,7 @@ cmd_block = {}
 
 def parse_filenames(s):
     statement = parser.parse(s)
-    return ' '.join(statement['cmd'])
+    return ','.join(statement['cmd'])
         
 with open(sys.argv[1]) as fid:
     for line in fid:
