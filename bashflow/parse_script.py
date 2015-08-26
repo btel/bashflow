@@ -15,7 +15,7 @@ cmd_block = {}
 
 def parse_filenames(s):
     statement = parser.parse(s)
-    return ','.join(statement['cmd'])
+    return statement['cmd']
         
 with open(sys.argv[1]) as fid:
     for line in fid:
@@ -25,8 +25,9 @@ with open(sys.argv[1]) as fid:
             m = re.match(regexpr, line)
             if m:
                 inputs, outputs = m.groups()
-                inputs = map(parse_filenames, inputs.split(','))
-                outputs = map(parse_filenames, outputs.split(','))
+                add = lambda x, y: x + y
+                inputs = reduce(add, map(parse_filenames, inputs.split(',')),[])
+                outputs = reduce(add, map(parse_filenames, outputs.split(',')), [])
                 cmd_block = {'inputs' : inputs,
                              'outputs' : outputs}
         else:
