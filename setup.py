@@ -4,7 +4,7 @@
 from distutils.core import setup
 
 setup(name='bashflow',
-      version='0.1',
+      version='0.12',
       description='Bash-based workflow control',
       author='Bartosz Telenczuk',
       author_email='muchatel@poczta.fm',
