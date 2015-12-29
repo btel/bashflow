@@ -25,7 +25,7 @@ def make_if_statement(inputs, outputs):
     conditions = []
     filedefs = 'INPUTFILES=`echo {}`\n'.format(" ".join(inputs))
     filedefs += 'OUTPUTFILES=`echo {}`\n'.format(" ".join(outputs))
-    inputs_exist = 'for file in $INPUTFILES; do [ ! -e "$file" ] && echo "Input file $file does not exist" >&2 && exit; done\n'
+    inputs_exist = 'for file in $INPUTFILES; do [ ! -e "$file" ] && echo "Input file $file does not exist" >&2 && exit 1; done\n'
 
     conditions = """
     runblock=0
@@ -45,40 +45,41 @@ def make_if_statement(inputs, outputs):
     return filedefs + inputs_exist + conditions + if_stmt
 
 
+def run_shell():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('script')
+    args = parser.parse_args()
 
+    generated_scripts = tempfile.NamedTemporaryFile(mode='w',
+            delete=False)
 
-
-parser = argparse.ArgumentParser()
-parser.add_argument('script')
-args = parser.parse_args()
-
-generated_scripts = tempfile.NamedTemporaryFile(mode='w',
-        delete=False)
-
-print(generated_scripts.name)
-open_statement = False
-with file(args.script) as fid:
-    for line in fid:
-        if line.startswith("#"):
-            try:
-                inputs, outputs = parse_rule(line)
-                if open_statement:
-                    generated_scripts.write('fi\n')
-                    open_statement = False
-                outp_line = make_if_statement(inputs, outputs)
-                open_statement = True
-                outp_line += 'echo "Running rule: {}"\n'.format(line[1:])
-            except NotARule:
-                outp_line = line
-        else:
-            outp_line = line
-        generated_scripts.write(outp_line) 
-
-if open_statement:
-    generated_scripts.write('fi\n')
+    print(generated_scripts.name)
     open_statement = False
-generated_scripts.flush()
+    with file(args.script) as fid:
+        for line in fid:
+            if line.startswith("#"):
+                try:
+                    inputs, outputs = parse_rule(line)
+                    if open_statement:
+                        generated_scripts.write('fi\n')
+                        open_statement = False
+                    outp_line = make_if_statement(inputs, outputs)
+                    open_statement = True
+                    outp_line += 'echo "Running rule: {}"\n'.format(line[1:])
+                except NotARule:
+                    outp_line = line
+            else:
+                outp_line = line
+            generated_scripts.write(outp_line) 
 
-subprocess.call(['/bin/bash', generated_scripts.name])
+    if open_statement:
+        generated_scripts.write('fi\n')
+        open_statement = False
+    generated_scripts.flush()
 
-generated_scripts.close()
+    subprocess.call(['/bin/bash', generated_scripts.name])
+
+    generated_scripts.close()
+
+if __name__ == '__main__':
+    run_shell()
